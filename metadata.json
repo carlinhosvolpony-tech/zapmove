@@ -1,0 +1,5 @@
+{
+  "name": "ZapMove - Transporte & Delivery",
+  "description": "Peça transporte ou entregas de forma simples e envie seu pedido diretamente via WhatsApp.",
+  "requestFramePermissions": ["geolocation"]
+}
