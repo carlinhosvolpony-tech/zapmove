@@ -17,7 +17,8 @@ import {
   CheckCircle2,
   Bike,
   MessageSquare,
-  ArrowUpRight
+  ArrowUpRight,
+  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
@@ -41,8 +42,25 @@ export default function App() {
   const [destination, setDestination] = useState('');
   const [details, setDetails] = useState('');
   const [step, setStep] = useState(1);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   const WHATSAPP_NUMBER = '5598984595785';
+
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    });
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   const getGeolocation = () => {
     setLoadingLocation(true);
@@ -122,14 +140,25 @@ export default function App() {
             ZAPMOVE
           </h1>
         </div>
-        {service && (
-          <button 
-            onClick={reset}
-            className="text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-brand-green transition-colors px-2 py-1"
-          >
-            Voltar
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {deferredPrompt && (
+            <button 
+              onClick={handleInstallClick}
+              className="flex items-center gap-1.5 bg-brand-green/10 text-brand-green px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider hover:bg-brand-green hover:text-white transition-all border border-brand-green/20"
+            >
+              <Download className="w-3 h-3" />
+              Baixar App
+            </button>
+          )}
+          {service && (
+            <button 
+              onClick={reset}
+              className="text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-brand-green transition-colors px-2 py-1"
+            >
+              Voltar
+            </button>
+          )}
+        </div>
       </header>
 
       <main className="w-full max-w-md flex-1 p-6 flex flex-col gap-6 relative z-10">

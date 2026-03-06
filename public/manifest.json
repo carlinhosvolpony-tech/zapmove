@@ -1,0 +1,21 @@
+{
+  "name": "ZapMove",
+  "short_name": "ZapMove",
+  "description": "Transporte e Delivery via WhatsApp",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#22c55e",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/zapmove-icon/192/192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://picsum.photos/seed/zapmove-icon/512/512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
