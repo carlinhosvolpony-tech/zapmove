@@ -52,13 +52,13 @@ export default function App() {
   const PRICES = {
     ride: {
       moto: {
-        'Centro': 5.00,
-        'Bairros': 7.00,
-        'Trizidela/Perimirim': 10.00
+        'Centro': 6.00,
+        'Bairros': 8.00,
+        'Trizidela/Perimirim': 12.00
       },
       car: {
-        'Centro': 15.00, // Default values since not provided
-        'Bairros': 20.00,
+        'Centro': 12.00, // Default values since not provided
+        'Bairros': 15.00,
         'Trizidela/Perimirim': 25.00
       }
     },
