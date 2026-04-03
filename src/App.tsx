@@ -57,15 +57,15 @@ export default function App() {
         'Trizidela/Perimirim': 12.00
       },
       car: {
-        'Centro': 12.00, // Default values since not provided
-        'Bairros': 15.00,
+        'Centro': 15.00, // Default values since not provided
+        'Bairros': 20.00,
         'Trizidela/Perimirim': 25.00
       }
     },
     delivery: {
-      'Centro': 2.00,
-      'Bairros': 3.00,
-      'Trizidela/Perimirim': 5.00
+      'Centro': 3.00,
+      'Bairros': 4.00,
+      'Trizidela/Perimirim': 6.00
     }
   };
 
@@ -289,30 +289,30 @@ export default function App() {
                     <span className="text-[9px] font-bold text-slate-500 uppercase">Corridas</span>
                     <div className="flex justify-between text-[11px]">
                       <span className="text-slate-600">Centro</span>
-                      <span className="font-bold text-brand-green">R$ 5,00</span>
+                      <span className="font-bold text-brand-green">R$ 6,00</span>
                     </div>
                     <div className="flex justify-between text-[11px]">
                       <span className="text-slate-600">Bairros</span>
-                      <span className="font-bold text-brand-green">R$ 7,00</span>
+                      <span className="font-bold text-brand-green">R$ 8,00</span>
                     </div>
                     <div className="flex justify-between text-[11px]">
                       <span className="text-slate-600">Triz./Perim.</span>
-                      <span className="font-bold text-brand-green">R$ 10,00</span>
+                      <span className="font-bold text-brand-green">R$ 12,00</span>
                     </div>
                   </div>
                   <div className="flex flex-col gap-1 border-l border-slate-200 pl-4">
                     <span className="text-[9px] font-bold text-slate-500 uppercase">Entregas</span>
                     <div className="flex justify-between text-[11px]">
                       <span className="text-slate-600">Centro</span>
-                      <span className="font-bold text-brand-blue">R$ 2,00</span>
-                    </div>
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-slate-600">Bairros</span>
                       <span className="font-bold text-brand-blue">R$ 3,00</span>
                     </div>
                     <div className="flex justify-between text-[11px]">
+                      <span className="text-slate-600">Bairros</span>
+                      <span className="font-bold text-brand-blue">R$ 4,00</span>
+                    </div>
+                    <div className="flex justify-between text-[11px]">
                       <span className="text-slate-600">Triz./Perim.</span>
-                      <span className="font-bold text-brand-blue">R$ 5,00</span>
+                      <span className="font-bold text-brand-blue">R$ 6,00</span>
                     </div>
                   </div>
                 </div>
