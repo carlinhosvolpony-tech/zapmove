@@ -57,8 +57,8 @@ export default function App() {
         'Trizidela/Perimirim': 12.00
       },
       car: {
-        'Centro': 15.00, // Default values since not provided
-        'Bairros': 20.00,
+        'Centro': 10.00, // Default values since not provided
+        'Bairros': 15.00,
         'Trizidela/Perimirim': 25.00
       }
     },
