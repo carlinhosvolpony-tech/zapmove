@@ -18,11 +18,18 @@ import {
   Bike,
   MessageSquare,
   ArrowUpRight,
-  Download
+  Download,
+  ArrowLeft,
+  Smartphone,
+  Map as MapIcon,
+  ShieldCheck,
+  Zap,
+  Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 
+// --- Types ---
 type ServiceType = 'ride' | 'delivery' | null;
 type VehicleType = 'car' | 'moto' | null;
 type RegionType = 'Centro' | 'Bairros' | 'Trizidela/Perimirim' | null;
@@ -32,6 +39,109 @@ interface LocationData {
   longitude: number;
   address?: string;
 }
+
+// --- Constants ---
+const WHATSAPP_NUMBER = '5598984595785';
+
+const PRICES = {
+  ride: {
+    moto: {
+      'Centro': 5.00,
+      'Bairros': 7.00,
+      'Trizidela/Perimirim': 10.00
+    },
+    car: {
+      'Centro': 15.00,
+      'Bairros': 20.00,
+      'Trizidela/Perimirim': 25.00
+    }
+  },
+  delivery: {
+    'Centro': 2.00,
+    'Bairros': 3.00,
+    'Trizidela/Perimirim': 5.00
+  }
+};
+
+// --- Components ---
+
+const Button = ({ 
+  children, 
+  onClick, 
+  variant = 'primary', 
+  className, 
+  disabled,
+  icon: Icon
+}: { 
+  children: React.ReactNode; 
+  onClick?: () => void; 
+  variant?: 'primary' | 'secondary' | 'ghost' | 'outline' | 'dark';
+  className?: string;
+  disabled?: boolean;
+  icon?: any;
+}) => {
+  const variants = {
+    primary: 'bg-gradient-to-r from-brand-green to-brand-blue text-white shadow-brand hover:shadow-brand/50 hover:-translate-y-0.5 active:translate-y-0',
+    secondary: 'bg-white/90 backdrop-blur-md text-slate-900 border border-white/50 hover:bg-white shadow-sm',
+    ghost: 'bg-transparent text-slate-500 hover:text-brand-green hover:bg-brand-green/5',
+    outline: 'bg-transparent border-2 border-brand-green text-brand-green hover:bg-brand-green hover:text-white',
+    dark: 'bg-brand-dark text-white hover:bg-brand-dark/90'
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        'relative flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-bold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0',
+        variants[variant],
+        className
+      )}
+    >
+      {Icon && <Icon className="w-5 h-5" />}
+      {children}
+    </button>
+  );
+};
+
+const Card = ({ children, className, onClick, active }: { children: React.ReactNode; className?: string; onClick?: () => void; active?: boolean }) => (
+  <div 
+    onClick={onClick}
+    className={cn(
+      'glass-card p-6 rounded-[32px] transition-all duration-500',
+      onClick && 'cursor-pointer hover:border-brand-green/40 hover:shadow-premium active:scale-[0.98]',
+      active && 'border-brand-green ring-2 ring-brand-green/20 bg-white/90',
+      className
+    )}
+  >
+    {children}
+  </div>
+);
+
+const Input = ({ label, icon: Icon, ...props }: { label: string; icon?: any } & React.InputHTMLAttributes<HTMLInputElement>) => (
+  <div className="flex flex-col gap-2 w-full">
+    <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 ml-1">
+      {label}
+    </label>
+    <div className="relative group">
+      {Icon && (
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-green transition-colors">
+          <Icon className="w-5 h-5" />
+        </div>
+      )}
+      <input 
+        {...props}
+        className={cn(
+          'glass-input w-full px-5 py-4 rounded-2xl text-slate-900 placeholder:text-slate-400',
+          Icon && 'pl-12',
+          props.className
+        )}
+      />
+    </div>
+  </div>
+);
+
+// --- Main App ---
 
 export default function App() {
   const [service, setService] = useState<ServiceType>(null);
@@ -46,39 +156,6 @@ export default function App() {
   const [step, setStep] = useState(1);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallModal, setShowInstallModal] = useState(false);
-
-  const WHATSAPP_NUMBER = '5598984595785';
-
-  const PRICES = {
-    ride: {
-      moto: {
-        'Centro': 6.00,
-        'Bairros': 8.00,
-        'Trizidela/Perimirim': 12.00
-      },
-      car: {
-        'Centro': 10.00, // Default values since not provided
-        'Bairros': 15.00,
-        'Trizidela/Perimirim': 25.00
-      }
-    },
-    delivery: {
-      'Centro': 3.00,
-      'Bairros': 4.00,
-      'Trizidela/Perimirim': 6.00
-    }
-  };
-
-  const getPrice = () => {
-    if (!region) return null;
-    if (service === 'delivery') {
-      return PRICES.delivery[region];
-    }
-    if (service === 'ride' && vehicle) {
-      return PRICES.ride[vehicle][region];
-    }
-    return null;
-  };
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -97,9 +174,7 @@ export default function App() {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setDeferredPrompt(null);
-      }
+      if (outcome === 'accepted') setDeferredPrompt(null);
     } else if (isIOS()) {
       setShowInstallModal(true);
     }
@@ -119,13 +194,19 @@ export default function App() {
         (error) => {
           console.error("Error getting location:", error);
           setLoadingLocation(false);
-          alert("Não foi possível obter sua localização. Por favor, verifique as permissões.");
+          // Fallback or silent error
         }
       );
     } else {
-      alert("Geolocalização não é suportada pelo seu navegador.");
       setLoadingLocation(false);
     }
+  };
+
+  const getPrice = () => {
+    if (!region) return null;
+    if (service === 'delivery') return PRICES.delivery[region];
+    if (service === 'ride' && vehicle) return PRICES.ride[vehicle][region];
+    return null;
   };
 
   const handleSendRequest = () => {
@@ -142,7 +223,7 @@ export default function App() {
 
     const message = `*NOVO CHAMADO - ${serviceLabel}*%0A%0A` +
       `*Nome:* ${name}%0A` +
-      `*Região:* ${region || 'Não informada'}%0A` +
+      `*Região:* ${region}%0A` +
       `*Origem:* ${origin}%0A` +
       `*Destino/Pedido:* ${destination}%0A` +
       `*Valor Estimado:* ${priceText}%0A` +
@@ -164,166 +245,158 @@ export default function App() {
     setRegion(null);
   };
 
+  const goBack = () => {
+    if (step === 2) setStep(1);
+    if (step === 3) {
+      if (service === 'ride') setStep(2);
+      else setStep(1);
+    }
+  };
+
   return (
-    <div className="min-h-screen font-sans text-slate-900 flex flex-col items-center relative overflow-x-hidden">
-      {/* Background Image with Overlay */}
+    <div className="min-h-screen font-sans text-slate-900 flex flex-col items-center relative">
+      {/* Background Layer */}
       <div className="fixed inset-0 z-0">
         <img 
-          src="https://picsum.photos/seed/city-aerial-view/1920/1080" 
+          src="https://picsum.photos/seed/zapmove-bg/1920/1080?blur=5" 
           alt="Background" 
           className="w-full h-full object-cover"
           referrerPolicy="no-referrer"
         />
         <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-white/60" />
       </div>
 
       {/* Header */}
-      <header className="w-full max-w-md bg-white/80 backdrop-blur-md border-b border-slate-200/50 px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
-        <div className="flex items-center gap-2" onClick={reset} style={{ cursor: 'pointer' }}>
-          <div className="relative w-10 h-10 flex items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-br from-brand-green to-brand-blue rounded-full shadow-md" />
-            <MessageSquare className="text-white w-5 h-5 relative z-10" />
-            <ArrowUpRight className="text-white w-3 h-3 absolute top-2 right-2 z-10" />
+      <header className="w-full max-w-md bg-white/80 backdrop-blur-2xl border-b border-slate-200/50 px-6 py-5 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+        <div className="flex items-center gap-3 cursor-pointer group" onClick={reset}>
+          <div className="relative w-12 h-12 flex items-center justify-center">
+            <div className="absolute inset-0 premium-gradient rounded-2xl shadow-brand rotate-3 group-hover:rotate-6 transition-transform duration-500" />
+            <div className="absolute inset-0 bg-white/20 rounded-2xl backdrop-blur-sm" />
+            <Zap className="text-white w-6 h-6 relative z-10 fill-white" />
           </div>
-          <h1 className="text-2xl font-black italic tracking-tighter bg-gradient-to-r from-brand-green to-brand-blue bg-clip-text text-transparent">
-            ZAPMOVE
-          </h1>
+          <div>
+            <h1 className="text-2xl font-black italic tracking-tighter text-gradient leading-none">
+              ZAPMOVE
+            </h1>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Premium Mobility</span>
+              <div className="w-1 h-1 bg-brand-green rounded-full animate-pulse" />
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
+        
+        <div className="flex items-center gap-2">
+          {step > 1 && (
+            <button 
+              onClick={goBack}
+              className="p-3 rounded-2xl bg-slate-100/80 text-slate-500 hover:bg-brand-green/10 hover:text-brand-green transition-all duration-300"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
           {(deferredPrompt || isIOS()) && (
             <button 
               onClick={handleInstallClick}
-              className="flex items-center gap-1.5 bg-brand-green text-white px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider hover:opacity-90 transition-all shadow-md shadow-brand-green/20"
+              className="p-3 rounded-2xl premium-gradient text-white shadow-brand hover:scale-110 transition-all duration-300"
             >
-              <Download className="w-3.5 h-3.5" />
-              Instalar App
-            </button>
-          )}
-          {service && (
-            <button 
-              onClick={reset}
-              className="text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-brand-green transition-colors px-2 py-1"
-            >
-              Voltar
+              <Download className="w-5 h-5" />
             </button>
           )}
         </div>
       </header>
 
-      <main className="w-full max-w-md flex-1 p-6 flex flex-col gap-6 relative z-10">
+      <main className="w-full max-w-md flex-1 p-6 flex flex-col gap-8 relative z-10">
+        {/* Progress Bar */}
+        <div className="flex gap-2.5 px-1">
+          {[1, 2, 3].map((s) => (
+            <div 
+              key={s} 
+              className={cn(
+                "h-2 flex-1 rounded-full transition-all duration-700 relative overflow-hidden",
+                step >= s ? "bg-brand-green/20" : "bg-slate-200/50"
+              )} 
+            >
+              {step >= s && (
+                <motion.div 
+                  initial={{ x: "-100%" }}
+                  animate={{ x: 0 }}
+                  className="absolute inset-0 bg-brand-green shadow-[0_0_12px_rgba(34,197,94,0.6)]"
+                />
+              )}
+            </div>
+          ))}
+        </div>
+
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div 
               key="step1"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="flex flex-col gap-4"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="flex flex-col gap-6"
             >
-              {/* Install Banner for Mobile Users */}
-              {(deferredPrompt || isIOS()) && (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-4 rounded-2xl shadow-lg border border-white/10 flex items-center justify-between gap-4 mb-2"
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-brand-green font-bold text-xs uppercase tracking-widest">
+                  <Star className="w-3 h-3 fill-brand-green" />
+                  <span>Seja bem-vindo</span>
+                </div>
+                <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-[1.1]">
+                  Para onde vamos <br/> <span className="text-gradient">hoje?</span>
+                </h2>
+                <p className="text-slate-500 font-medium text-sm">Escolha o serviço ideal para sua necessidade.</p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-5">
+                <Card 
+                  onClick={() => { setService('ride'); setStep(2); }}
+                  className="flex items-center gap-6 group relative overflow-hidden"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-brand-green rounded-xl flex items-center justify-center shadow-inner">
-                      <Download className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold">ZapMove no seu Celular</h4>
-                      <p className="text-[10px] text-slate-300">Acesse mais rápido sem abrir o navegador.</p>
-                    </div>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-brand-green/5 rounded-full -mr-16 -mt-16 transition-transform duration-700 group-hover:scale-150" />
+                  <div className="w-20 h-20 bg-brand-green/10 rounded-3xl flex items-center justify-center group-hover:bg-brand-green group-hover:rotate-6 transition-all duration-500">
+                    <Car className="w-10 h-10 text-brand-green group-hover:text-white transition-colors" />
                   </div>
-                  <button 
-                    onClick={handleInstallClick}
-                    className="bg-brand-green text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tight hover:scale-105 transition-transform active:scale-95"
-                  >
-                    Instalar
-                  </button>
-                </motion.div>
-              )}
+                  <div className="flex-1 relative z-10">
+                    <h3 className="font-black text-2xl text-slate-900">Transporte</h3>
+                    <p className="text-sm text-slate-500 font-medium">Viagens rápidas e seguras</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-slate-50 group-hover:bg-brand-green/20 group-hover:translate-x-2 transition-all duration-300">
+                    <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-brand-green" />
+                  </div>
+                </Card>
 
-              <div className="mb-2">
-                <h2 className="text-2xl font-bold text-slate-900 drop-shadow-sm">Para onde vamos hoje?</h2>
-                <p className="text-slate-600 font-medium">Escolha o serviço desejado para começar.</p>
+                <Card 
+                  onClick={() => { setService('delivery'); setStep(3); }}
+                  className="flex items-center gap-6 group relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue/5 rounded-full -mr-16 -mt-16 transition-transform duration-700 group-hover:scale-150" />
+                  <div className="w-20 h-20 bg-brand-blue/10 rounded-3xl flex items-center justify-center group-hover:bg-brand-blue group-hover:-rotate-6 transition-all duration-500">
+                    <Package className="w-10 h-10 text-brand-blue group-hover:text-white transition-colors" />
+                  </div>
+                  <div className="flex-1 relative z-10">
+                    <h3 className="font-black text-2xl text-slate-900">Delivery</h3>
+                    <p className="text-sm text-slate-500 font-medium">Entregas em minutos</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-slate-50 group-hover:bg-brand-blue/20 group-hover:translate-x-2 transition-all duration-300">
+                    <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-brand-blue" />
+                  </div>
+                </Card>
               </div>
 
-              <button 
-                onClick={() => { setService('ride'); setStep(2); }}
-                className="group relative overflow-hidden bg-white/60 backdrop-blur-md border border-white/80 rounded-2xl p-6 flex items-center gap-6 hover:border-brand-green/50 transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98]"
-              >
-                <div className="w-16 h-16 bg-white/80 rounded-2xl flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-brand-green group-hover:to-brand-blue transition-all duration-300 shadow-inner">
-                  <Car className="w-8 h-8 text-brand-green group-hover:text-white transition-colors duration-300" />
-                </div>
-                <div className="flex-1 text-left">
-                  <h3 className="font-bold text-lg text-slate-900">Transporte</h3>
-                  <p className="text-sm text-slate-600">Viagens rápidas e seguras</p>
-                </div>
-                <ChevronRight className="text-slate-400 group-hover:text-brand-green transition-colors" />
-              </button>
-
-              <button 
-                onClick={() => { setService('delivery'); setStep(3); }}
-                className="group relative overflow-hidden bg-white/60 backdrop-blur-md border border-white/80 rounded-2xl p-6 flex items-center gap-6 hover:border-brand-green/50 transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98]"
-              >
-                <div className="w-16 h-16 bg-white/80 rounded-2xl flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-brand-green group-hover:to-brand-blue transition-all duration-300 shadow-inner">
-                  <Package className="w-8 h-8 text-brand-green group-hover:text-white transition-colors duration-300" />
-                </div>
-                <div className="flex-1 text-left">
-                  <h3 className="font-bold text-lg text-slate-900">Delivery</h3>
-                  <p className="text-sm text-slate-600">Entregas e encomendas</p>
-                </div>
-                <ChevronRight className="text-slate-400 group-hover:text-brand-green transition-colors" />
-              </button>
-
-              {/* Price Table Reference */}
-              <div className="mt-2 bg-white/40 backdrop-blur-sm rounded-2xl p-4 border border-white/60">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
-                  <Info className="w-3 h-3" />
-                  Tabela de Preços (Moto)
-                </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[9px] font-bold text-slate-500 uppercase">Corridas</span>
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-slate-600">Centro</span>
-                      <span className="font-bold text-brand-green">R$ 6,00</span>
-                    </div>
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-slate-600">Bairros</span>
-                      <span className="font-bold text-brand-green">R$ 8,00</span>
-                    </div>
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-slate-600">Triz./Perim.</span>
-                      <span className="font-bold text-brand-green">R$ 12,00</span>
-                    </div>
+              {/* Trust Badges */}
+              <div className="grid grid-cols-3 gap-4 mt-2">
+                {[
+                  { icon: ShieldCheck, text: 'Seguro', color: 'text-brand-green' },
+                  { icon: Clock, text: 'Rápido', color: 'text-brand-blue' },
+                  { icon: Star, text: 'Premium', color: 'text-amber-500' }
+                ].map((item, i) => (
+                  <div key={i} className="flex flex-col items-center gap-2 p-4 bg-white/40 rounded-3xl border border-white/50">
+                    <item.icon className={cn("w-6 h-6", item.color)} />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{item.text}</span>
                   </div>
-                  <div className="flex flex-col gap-1 border-l border-slate-200 pl-4">
-                    <span className="text-[9px] font-bold text-slate-500 uppercase">Entregas</span>
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-slate-600">Centro</span>
-                      <span className="font-bold text-brand-blue">R$ 3,00</span>
-                    </div>
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-slate-600">Bairros</span>
-                      <span className="font-bold text-brand-blue">R$ 4,00</span>
-                    </div>
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-slate-600">Triz./Perim.</span>
-                      <span className="font-bold text-brand-blue">R$ 6,00</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 p-4 bg-brand-green/10 backdrop-blur-md rounded-2xl flex gap-3 items-start border border-brand-green/20">
-                <Info className="w-5 h-5 text-brand-green shrink-0 mt-0.5" />
-                <p className="text-xs text-slate-700 leading-relaxed font-bold">
-                  Seu pedido será enviado diretamente para nossa central via WhatsApp. 
-                  Certifique-se de ter o aplicativo instalado.
-                </p>
+                ))}
               </div>
             </motion.div>
           )}
@@ -331,110 +404,116 @@ export default function App() {
           {step === 2 && (
             <motion.div 
               key="step2"
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="flex flex-col gap-4"
+              exit={{ opacity: 0, x: -30 }}
+              className="flex flex-col gap-6"
             >
-              <div className="mb-2">
-                <h2 className="text-2xl font-bold text-slate-900 drop-shadow-sm">Escolha o veículo</h2>
-                <p className="text-slate-600 font-medium">Qual a melhor opção para você agora?</p>
+              <div className="space-y-2">
+                <h2 className="text-4xl font-black text-slate-900 tracking-tight">Qual o <span className="text-gradient">veículo?</span></h2>
+                <p className="text-slate-500 font-medium">Selecione como você deseja viajar.</p>
               </div>
 
-              <button 
-                onClick={() => { setVehicle('car'); setStep(3); }}
-                className="group relative overflow-hidden bg-white/60 backdrop-blur-md border border-white/80 rounded-2xl p-6 flex items-center gap-6 hover:border-brand-green/50 transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98]"
-              >
-                <div className="w-16 h-16 bg-white/80 rounded-2xl flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-brand-green group-hover:to-brand-blue transition-all duration-300 shadow-inner">
-                  <Car className="w-8 h-8 text-brand-green group-hover:text-white transition-colors duration-300" />
-                </div>
-                <div className="flex-1 text-left">
-                  <h3 className="font-bold text-lg text-slate-900">Carro</h3>
-                  <p className="text-sm text-slate-600">Mais conforto e espaço</p>
-                </div>
-                <ChevronRight className="text-slate-400 group-hover:text-brand-green transition-colors" />
-              </button>
+              <div className="grid grid-cols-1 gap-5">
+                <Card 
+                  onClick={() => { setVehicle('moto'); setStep(3); }}
+                  className="flex items-center gap-6 group"
+                >
+                  <div className="w-20 h-20 bg-brand-green/10 rounded-3xl flex items-center justify-center group-hover:bg-brand-green transition-all duration-500">
+                    <Bike className="w-10 h-10 text-brand-green group-hover:text-white transition-colors" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-black text-2xl text-slate-900">Moto</h3>
+                    <p className="text-sm text-slate-500 font-medium">Agilidade para o dia a dia</p>
+                  </div>
+                  <ChevronRight className="text-slate-300 group-hover:text-brand-green transition-colors" />
+                </Card>
 
-              <button 
-                onClick={() => { setVehicle('moto'); setStep(3); }}
-                className="group relative overflow-hidden bg-white/60 backdrop-blur-md border border-white/80 rounded-2xl p-6 flex items-center gap-6 hover:border-brand-green/50 transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98]"
-              >
-                <div className="w-16 h-16 bg-white/80 rounded-2xl flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-brand-green group-hover:to-brand-blue transition-all duration-300 shadow-inner">
-                  <Bike className="w-8 h-8 text-brand-green group-hover:text-white transition-colors duration-300" />
-                </div>
-                <div className="flex-1 text-left">
-                  <h3 className="font-bold text-lg text-slate-900">Moto</h3>
-                  <p className="text-sm text-slate-600">Mais agilidade e economia</p>
-                </div>
-                <ChevronRight className="text-slate-400 group-hover:text-brand-green transition-colors" />
-              </button>
+                <Card 
+                  onClick={() => { setVehicle('car'); setStep(3); }}
+                  className="flex items-center gap-6 group"
+                >
+                  <div className="w-20 h-20 bg-brand-blue/10 rounded-3xl flex items-center justify-center group-hover:bg-brand-blue transition-all duration-500">
+                    <Car className="w-10 h-10 text-brand-blue group-hover:text-white transition-colors" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-black text-2xl text-slate-900">Carro</h3>
+                    <p className="text-sm text-slate-500 font-medium">Conforto e climatização</p>
+                  </div>
+                  <ChevronRight className="text-slate-300 group-hover:text-brand-blue transition-colors" />
+                </Card>
+              </div>
             </motion.div>
           )}
 
           {step === 3 && (
             <motion.div 
               key="step3"
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              exit={{ opacity: 0, x: -30 }}
               className="flex flex-col gap-6"
             >
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900 drop-shadow-sm">
-                  {service === 'ride' ? 'Detalhes da Viagem' : 'Detalhes da Entrega'}
+              <div className="space-y-2">
+                <h2 className="text-4xl font-black text-slate-900 tracking-tight">
+                  {service === 'ride' ? 'Sua Viagem' : 'Seu Pedido'}
                 </h2>
-                <p className="text-slate-600 font-medium">Preencha as informações abaixo.</p>
+                <p className="text-slate-500 font-medium">Preencha os detalhes para solicitar.</p>
               </div>
 
-              {/* Location Section */}
-              <div className="bg-white/60 backdrop-blur-md border border-white/80 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-brand-blue" />
-                    <span className="font-bold text-slate-800">Sua Localização</span>
+              {/* Location Card */}
+              <Card className="p-6 flex flex-col gap-5 border-none bg-white/60 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-brand-blue/5 rounded-full -mr-12 -mt-12" />
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-brand-blue/10 rounded-2xl flex items-center justify-center">
+                      <MapPin className="w-7 h-7 text-brand-blue" />
+                    </div>
+                    <div>
+                      <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Localização</h4>
+                      <p className="text-base font-bold text-slate-800">
+                        {location ? 'GPS Conectado' : 'Aguardando GPS'}
+                      </p>
+                    </div>
                   </div>
                   {!location && (
                     <button 
                       onClick={getGeolocation}
                       disabled={loadingLocation}
-                      className="text-xs font-bold text-brand-blue hover:text-brand-green disabled:opacity-50 bg-brand-blue/10 px-3 py-1.5 rounded-lg transition-colors border border-brand-blue/20"
+                      className="text-[11px] font-black uppercase tracking-widest bg-brand-blue text-white px-5 py-3 rounded-2xl shadow-xl shadow-brand-blue/20 disabled:opacity-50 active:scale-95 transition-all"
                     >
-                      {loadingLocation ? 'Buscando...' : 'Obter GPS'}
+                      {loadingLocation ? '...' : 'Ativar'}
                     </button>
                   )}
                 </div>
-                
-                {location ? (
-                  <div className="flex items-center gap-3 bg-brand-green/10 text-brand-green p-4 rounded-xl border border-brand-green/20 shadow-inner">
-                    <CheckCircle2 className="w-5 h-5 shrink-0" />
-                    <div className="text-xs">
-                      <p className="font-bold">Localização capturada!</p>
-                      <p className="opacity-80 font-mono">{location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-xs text-slate-500 italic bg-white/40 p-3 rounded-xl border border-dashed border-slate-300">
-                    Clique em "Obter GPS" para enviar sua posição exata.
-                  </div>
+                {location && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-3 text-[11px] font-mono text-brand-green bg-brand-green/5 p-3 rounded-xl border border-brand-green/20"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Coordenadas: {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}</span>
+                  </motion.div>
                 )}
-              </div>
+              </Card>
 
-              {/* Form Section */}
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">
-                    Região (Para cálculo de valor)
+              {/* Form */}
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-3">
+                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                    Selecione a Região
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-3">
                     {(['Centro', 'Bairros', 'Trizidela/Perimirim'] as const).map((r) => (
                       <button
                         key={r}
                         onClick={() => setRegion(r)}
                         className={cn(
-                          "py-3 px-2 rounded-xl text-[10px] font-bold border transition-all shadow-sm",
+                          "py-4 px-2 rounded-2xl text-[10px] font-black uppercase tracking-tight border-2 transition-all duration-300",
                           region === r 
-                            ? "bg-brand-green text-white border-brand-green" 
-                            : "bg-white/60 text-slate-600 border-white/80 hover:border-brand-green/30"
+                            ? "bg-brand-green border-brand-green text-white shadow-brand scale-[1.02]" 
+                            : "bg-white/60 border-white/80 text-slate-500 hover:border-brand-green/30"
                         )}
                       >
                         {r}
@@ -443,157 +522,151 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">
-                    Seu Nome
-                  </label>
-                  <input 
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Ex: João Silva"
-                    className="w-full bg-white/60 backdrop-blur-md border border-white/80 rounded-xl px-4 py-4 text-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-green/20 focus:border-brand-green transition-all shadow-sm placeholder:text-slate-400"
-                  />
-                </div>
+                <Input 
+                  label="Seu Nome" 
+                  icon={Smartphone}
+                  value={name} 
+                  onChange={(e) => setName(e.target.value)} 
+                  placeholder="Como podemos te chamar?" 
+                />
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">
-                    Local de Origem
-                  </label>
-                  <input 
-                    type="text"
-                    value={origin}
-                    onChange={(e) => setOrigin(e.target.value)}
-                    placeholder="Ex: Minha Casa / Rua A, 10"
-                    className="w-full bg-white/60 backdrop-blur-md border border-white/80 rounded-xl px-4 py-4 text-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-green/20 focus:border-brand-green transition-all shadow-sm placeholder:text-slate-400"
-                  />
-                </div>
+                <Input 
+                  label="Local de Origem" 
+                  icon={Navigation}
+                  value={origin} 
+                  onChange={(e) => setOrigin(e.target.value)} 
+                  placeholder="Onde você está agora?" 
+                />
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">
-                    {service === 'ride' ? 'Destino' : 'O que entregar?'}
-                  </label>
-                  <input 
-                    type="text"
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
-                    placeholder={service === 'ride' ? 'Ex: Rua das Flores, 123' : 'Ex: 2 Pizzas e 1 Coca'}
-                    className="w-full bg-white/60 backdrop-blur-md border border-white/80 rounded-xl px-4 py-4 text-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-green/20 focus:border-brand-green transition-all shadow-sm placeholder:text-slate-400"
-                  />
-                </div>
+                <Input 
+                  label={service === 'ride' ? 'Destino Final' : 'O que entregar?'} 
+                  icon={MapPinned}
+                  value={destination} 
+                  onChange={(e) => setDestination(e.target.value)} 
+                  placeholder={service === 'ride' ? 'Para onde você vai?' : 'Descreva o seu pedido'} 
+                />
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">
-                    Observações (Opcional)
+                <div className="flex flex-col gap-2">
+                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                    Observações Adicionais
                   </label>
                   <textarea 
                     value={details}
                     onChange={(e) => setDetails(e.target.value)}
-                    placeholder="Ex: Perto da padaria, portão azul..."
+                    placeholder="Ponto de referência, cor da casa, etc..."
                     rows={3}
-                    className="w-full bg-white/60 backdrop-blur-md border border-white/80 rounded-xl px-4 py-4 text-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-green/20 focus:border-brand-green transition-all resize-none shadow-sm placeholder:text-slate-400"
+                    className="glass-input w-full px-5 py-4 rounded-2xl text-slate-900 placeholder:text-slate-400 resize-none"
                   />
                 </div>
               </div>
 
-              {region && (
-                <div className="bg-gradient-to-r from-brand-green/20 to-brand-blue/20 p-4 rounded-2xl border border-white/50 flex items-center justify-between">
-                  <span className="text-sm font-bold text-slate-700">Valor Estimado:</span>
-                  <span className="text-xl font-black text-brand-blue">
-                    R$ {getPrice()?.toFixed(2).replace('.', ',')}
-                  </span>
-                </div>
-              )}
+              {/* Price & Action */}
+              <div className="space-y-5 pt-4">
+                {region && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-brand-dark rounded-[32px] p-6 text-white flex items-center justify-between shadow-2xl relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16" />
+                    <div className="flex items-center gap-4 relative z-10">
+                      <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center">
+                        <Clock className="w-7 h-7 text-brand-green" />
+                      </div>
+                      <div>
+                        <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Valor Estimado</h4>
+                        <p className="text-xs font-bold text-brand-green">Pagamento na entrega</p>
+                      </div>
+                    </div>
+                    <div className="text-right relative z-10">
+                      <span className="text-3xl font-black text-white">
+                        R$ {getPrice()?.toFixed(2).replace('.', ',')}
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
 
-              <button 
-                onClick={handleSendRequest}
-                disabled={!name || !origin || !destination || !region}
-                className="mt-4 w-full bg-gradient-to-r from-brand-green to-brand-blue text-white rounded-2xl py-5 font-bold flex items-center justify-center gap-3 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-brand-blue/30 active:scale-[0.98] relative z-20"
-              >
-                <Send className="w-5 h-5" />
-                Enviar via WhatsApp
-              </button>
+                <Button 
+                  onClick={handleSendRequest}
+                  disabled={!name || !origin || !destination || !region}
+                  className="w-full py-6 text-xl rounded-[24px]"
+                  icon={Send}
+                >
+                  Chamar no WhatsApp
+                </Button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
       </main>
 
-      {/* Footer Info */}
-      <footer className="w-full max-w-md p-8 text-center border-t border-slate-200/30 relative z-10">
-        <div className="flex items-center justify-center gap-4 text-slate-500 mb-3">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest">
-            <Clock className="w-3.5 h-3.5 text-brand-green" />
-            24 Horas
+      {/* Footer */}
+      <footer className="w-full max-w-md p-10 text-center relative z-10">
+        <div className="flex items-center justify-center gap-8 text-slate-400 mb-6">
+          <div className="flex flex-col items-center gap-1">
+            <Clock className="w-5 h-5 text-brand-green" />
+            <span className="text-[8px] font-black uppercase tracking-widest">24 Horas</span>
           </div>
-          <div className="w-1 h-1 bg-slate-300 rounded-full" />
-          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest">
-            <MapPinned className="w-3.5 h-3.5 text-brand-blue" />
-            Sua Região
+          <div className="w-px h-8 bg-slate-200/50" />
+          <div className="flex flex-col items-center gap-1">
+            <ShieldCheck className="w-5 h-5 text-brand-blue" />
+            <span className="text-[8px] font-black uppercase tracking-widest">Seguro</span>
+          </div>
+          <div className="w-px h-8 bg-slate-200/50" />
+          <div className="flex flex-col items-center gap-1">
+            <MapIcon className="w-5 h-5 text-brand-green" />
+            <span className="text-[8px] font-black uppercase tracking-widest">Sua Região</span>
           </div>
         </div>
-        <p className="text-[10px] text-slate-500 font-bold">
-          © 2024 ZapMove Tecnologia. Todos os direitos reservados.
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">
+          © 2024 ZapMove Tecnologia
         </p>
       </footer>
 
       {/* iOS Install Modal */}
       <AnimatePresence>
         {showInstallModal && (
-          <div className="fixed inset-0 z-[100] flex items-end justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-end justify-center p-4 bg-brand-dark/90 backdrop-blur-md">
             <motion.div 
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              className="w-full max-w-md bg-white rounded-t-3xl p-8 flex flex-col gap-6"
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="w-full max-w-md bg-white rounded-[48px] p-10 flex flex-col gap-8 shadow-2xl"
             >
               <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">Instalar ZapMove</h3>
-                  <p className="text-sm text-slate-500">Siga os passos abaixo no seu iPhone:</p>
+                <div className="space-y-2">
+                  <h3 className="text-3xl font-black text-slate-900 tracking-tight">Instalar ZapMove</h3>
+                  <p className="text-sm text-slate-500 font-medium">Tenha o ZapMove sempre à mão no seu iPhone.</p>
                 </div>
                 <button 
                   onClick={() => setShowInstallModal(false)}
-                  className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                  className="p-4 bg-slate-100 rounded-3xl text-slate-400 hover:text-slate-600 transition-colors"
                 >
-                  <ChevronRight className="w-6 h-6 rotate-90 text-slate-400" />
+                  <ChevronRight className="w-6 h-6 rotate-90" />
                 </button>
               </div>
 
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                    <ArrowUpRight className="w-6 h-6 text-brand-blue" />
+              <div className="space-y-5">
+                {[
+                  { icon: ArrowUpRight, color: 'text-brand-blue', text: 'Toque no botão de Compartilhar na barra inferior.' },
+                  { icon: Download, color: 'text-brand-green', text: 'Role para baixo e toque em "Adicionar à Tela de Início".' },
+                  { icon: CheckCircle2, color: 'text-brand-green', text: 'Toque em "Adicionar" no canto superior direito.' }
+                ].map((step, i) => (
+                  <div key={i} className="flex items-center gap-6 p-6 bg-slate-50 rounded-[32px] border border-slate-100">
+                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm shrink-0">
+                      <step.icon className={cn("w-7 h-7", step.color)} />
+                    </div>
+                    <p className="text-sm font-bold text-slate-700 leading-tight">
+                      <span className="text-brand-green mr-1">{i + 1}.</span> {step.text}
+                    </p>
                   </div>
-                  <p className="text-sm font-medium text-slate-700">
-                    1. Toque no botão de <span className="font-bold">Compartilhar</span> na barra inferior do Safari.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                    <Download className="w-6 h-6 text-brand-green" />
-                  </div>
-                  <p className="text-sm font-medium text-slate-700">
-                    2. Role para baixo e toque em <span className="font-bold">"Adicionar à Tela de Início"</span>.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                    <CheckCircle2 className="w-6 h-6 text-brand-green" />
-                  </div>
-                  <p className="text-sm font-medium text-slate-700">
-                    3. Toque em <span className="font-bold">"Adicionar"</span> no canto superior direito.
-                  </p>
-                </div>
+                ))}
               </div>
 
-              <button 
-                onClick={() => setShowInstallModal(false)}
-                className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all"
-              >
-                Entendi
-              </button>
+              <Button onClick={() => setShowInstallModal(false)} className="w-full py-5 text-lg rounded-3xl">
+                Entendi, vamos lá!
+              </Button>
             </motion.div>
           </div>
         )}
