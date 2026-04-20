@@ -1,12 +1,22 @@
 {
-  "name": "ZapMove",
+  "name": "ZapMove - Transporte e Delivery",
   "short_name": "ZapMove",
-  "description": "Transporte e Delivery via WhatsApp",
+  "description": "Sua solução premium para transporte e delivery via WhatsApp.",
+  "lang": "pt-BR",
   "start_url": "/",
+  "id": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#22c55e",
+  "categories": ["utilities", "travel", "business"],
   "icons": [
+    {
+      "src": "https://picsum.photos/seed/zapmove-icon/144/144",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "https://picsum.photos/seed/zapmove-icon/192/192",
       "sizes": "192x192",
@@ -18,6 +28,15 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://picsum.photos/seed/zapmove-shot1/1080/1920",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tela Inicial do ZapMove"
     }
   ]
 }
