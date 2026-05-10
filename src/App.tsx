@@ -36,8 +36,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 
 // --- Types ---
-type ServiceType = 'ride' | 'delivery' | 'school_van' | null;
-type VehicleType = 'car' | 'moto' | null;
+type ServiceType = 'ride' | 'delivery' | null;
+type VehicleType = 'moto' | null;
 type RegionType = 'Centro' | 'Bairros' | 'Trizidela/Perimirim' | null;
 
 interface LocationData {
@@ -55,19 +55,13 @@ const PRICES = {
       'Centro': 5.00,
       'Bairros': 7.00,
       'Trizidela/Perimirim': 10.00
-    },
-    car: {
-      'Centro': 15.00,
-      'Bairros': 20.00,
-      'Trizidela/Perimirim': 25.00
     }
   },
   delivery: {
     'Centro': 2.00,
     'Bairros': 3.00,
     'Trizidela/Perimirim': 5.00
-  },
-  school_van: 200.00
+  }
 };
 
 // --- Components ---
@@ -160,11 +154,6 @@ export default function App() {
   const [destination, setDestination] = useState('');
   const [details, setDetails] = useState('');
   const [region, setRegion] = useState<RegionType>(null);
-  const [phone, setPhone] = useState('');
-  const [childName, setChildName] = useState('');
-  const [childGrade, setChildGrade] = useState('');
-  const [childRoom, setChildRoom] = useState('');
-  const [childShift, setChildShift] = useState('');
   const [step, setStep] = useState(1);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallModal, setShowInstallModal] = useState(false);
@@ -215,7 +204,6 @@ export default function App() {
   };
 
   const getPrice = () => {
-    if (service === 'school_van') return PRICES.school_van;
     if (!region) return null;
     if (service === 'delivery') return PRICES.delivery[region];
     if (service === 'ride' && vehicle) return PRICES.ride[vehicle][region];
@@ -229,44 +217,26 @@ export default function App() {
     
     let serviceLabel = '';
     if (service === 'ride') {
-      serviceLabel = `TRANSPORTE (${vehicle === 'car' ? 'CARRO' : 'MOTO'})`;
+      serviceLabel = 'TRANSPORTE (MOTO)';
     } else if (service === 'delivery') {
-      serviceLabel = 'DELIVERY';
-    } else if (service === 'school_van') {
-      serviceLabel = 'VAN ESCOLAR';
+      serviceLabel = 'DELIVERY MOTO';
     }
 
     const price = getPrice();
     const priceText = price 
-      ? `R$ ${price.toFixed(2).replace('.', ',')}${service === 'school_van' ? '/mês' : ''}` 
+      ? `R$ ${price.toFixed(2).replace('.', ',')}` 
       : 'A combinar';
 
     let message = '';
     
-    if (service === 'school_van') {
-      message = `*CADASTRO VAN ESCOLAR*%0A%0A` +
-        `*DADOS DO RESPONSÁVEL*%0A` +
-        `*Nome:* ${name}%0A` +
-        `*Endereço:* ${origin}%0A` +
-        `*Telefone:* ${phone}%0A%0A` +
-        `*DADOS DA CRIANÇA*%0A` +
-        `*Nome:* ${childName}%0A` +
-        `*Escola:* ${destination}%0A` +
-        `*Série:* ${childGrade}%0A` +
-        `*Sala:* ${childRoom}%0A` +
-        `*Turno:* ${childShift}%0A%0A` +
-        `*Valor Mensal:* ${priceText}%0A` +
-        `*Localização Ref:* ${locationLink}`;
-    } else {
-      message = `*NOVO CHAMADO - ${serviceLabel}*%0A%0A` +
-        `*Nome:* ${name}%0A` +
-        `*Região:* ${region}%0A` +
-        `*Origem:* ${origin}%0A` +
-        `*Destino/Pedido:* ${destination}%0A` +
-        `*Valor Estimado:* ${priceText}%0A` +
-        `*Detalhes:* ${details || 'Nenhum'}%0A%0A` +
-        `*Minha Localização:* ${locationLink}`;
-    }
+    message = `*NOVO CHAMADO - ${serviceLabel}*%0A%0A` +
+      `*Nome:* ${name}%0A` +
+      `*Região:* ${region}%0A` +
+      `*Origem:* ${origin}%0A` +
+      `*Destino/Pedido:* ${destination}%0A` +
+      `*Valor Estimado:* ${priceText}%0A` +
+      `*Detalhes:* ${details || 'Nenhum'}%0A%0A` +
+      `*Minha Localização:* ${locationLink}`;
 
     const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
     window.open(whatsappUrl, '_blank');
@@ -278,28 +248,18 @@ export default function App() {
     setStep(1);
     setName('');
     setOrigin('');
-    setPhone('');
-    setChildName('');
-    setChildGrade('');
-    setChildRoom('');
-    setChildShift('');
     setDestination('');
     setDetails('');
     setRegion(null);
   };
 
   const goBack = () => {
-    if (step === 2) setStep(1);
-    if (step === 3) {
-      if (service === 'ride') setStep(2);
-      else setStep(1);
-    }
+    setStep(1);
   };
 
   const getStep3Title = () => {
-    if (service === 'ride') return 'Sua Viagem';
-    if (service === 'delivery') return 'Seu Pedido';
-    if (service === 'school_van') return 'Van Escolar';
+    if (service === 'ride') return 'Transporte Moto';
+    if (service === 'delivery') return 'Delivery Moto';
     return '';
   };
 
@@ -358,8 +318,8 @@ export default function App() {
 
       <main className="w-full max-w-md flex-1 p-6 flex flex-col gap-8 relative z-10">
         {/* Progress Bar */}
-        <div className="flex gap-2.5 px-1">
-          {[1, 2, 3].map((s) => (
+              <div className="flex gap-2.5 px-1">
+          {[1, 3].map((s) => (
             <div 
               key={s} 
               className={cn(
@@ -401,16 +361,16 @@ export default function App() {
 
               <div className="grid grid-cols-1 gap-5">
                 <Card 
-                  onClick={() => { setService('ride'); setStep(2); }}
+                  onClick={() => { setService('ride'); setVehicle('moto'); setStep(3); }}
                   className="flex items-center gap-6 group relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-brand-green/5 rounded-full -mr-16 -mt-16 transition-transform duration-700 group-hover:scale-150" />
                   <div className="w-20 h-20 bg-brand-green/10 rounded-3xl flex items-center justify-center group-hover:bg-brand-green group-hover:rotate-6 transition-all duration-500">
-                    <Car className="w-10 h-10 text-brand-green group-hover:text-white transition-colors" />
+                    <Bike className="w-10 h-10 text-brand-green group-hover:text-white transition-colors" />
                   </div>
                   <div className="flex-1 relative z-10">
                     <h3 className="font-black text-2xl text-slate-900">Transporte</h3>
-                    <p className="text-sm text-slate-500 font-medium">Viagens rápidas e seguras</p>
+                    <p className="text-sm text-slate-500 font-medium">Moto Táxi rápido e seguro</p>
                   </div>
                   <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-slate-50 group-hover:bg-brand-green/20 group-hover:translate-x-2 transition-all duration-300">
                     <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-brand-green" />
@@ -418,7 +378,7 @@ export default function App() {
                 </Card>
 
                 <Card 
-                  onClick={() => { setService('delivery'); setStep(3); }}
+                  onClick={() => { setService('delivery'); setVehicle('moto'); setStep(3); }}
                   className="flex items-center gap-6 group relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue/5 rounded-full -mr-16 -mt-16 transition-transform duration-700 group-hover:scale-150" />
@@ -426,28 +386,11 @@ export default function App() {
                     <Package className="w-10 h-10 text-brand-blue group-hover:text-white transition-colors" />
                   </div>
                   <div className="flex-1 relative z-10">
-                    <h3 className="font-black text-2xl text-slate-900">Delivery</h3>
+                    <h3 className="font-black text-2xl text-slate-900">Delivery Moto</h3>
                     <p className="text-sm text-slate-500 font-medium">Entregas em minutos</p>
                   </div>
                   <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-slate-50 group-hover:bg-brand-blue/20 group-hover:translate-x-2 transition-all duration-300">
                     <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-brand-blue" />
-                  </div>
-                </Card>
-
-                <Card 
-                  onClick={() => { setService('school_van'); setStep(3); }}
-                  className="flex items-center gap-6 group relative overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full -mr-16 -mt-16 transition-transform duration-700 group-hover:scale-150" />
-                  <div className="w-20 h-20 bg-amber-500/10 rounded-3xl flex items-center justify-center group-hover:bg-amber-500 group-hover:rotate-6 transition-all duration-500">
-                    <Bus className="w-10 h-10 text-amber-500 group-hover:text-white transition-colors" />
-                  </div>
-                  <div className="flex-1 relative z-10">
-                    <h3 className="font-black text-2xl text-slate-900">Van Escolar</h3>
-                    <p className="text-sm text-slate-500 font-medium">Transporte mensal infantil</p>
-                  </div>
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-slate-50 group-hover:bg-amber-500/20 group-hover:translate-x-2 transition-all duration-300">
-                    <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-amber-500" />
                   </div>
                 </Card>
               </div>
@@ -468,51 +411,6 @@ export default function App() {
             </motion.div>
           )}
 
-          {step === 2 && (
-            <motion.div 
-              key="step2"
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -30 }}
-              className="flex flex-col gap-6"
-            >
-              <div className="space-y-2">
-                <h2 className="text-4xl font-black text-slate-900 tracking-tight">Qual o <span className="text-gradient">veículo?</span></h2>
-                <p className="text-slate-500 font-medium">Selecione como você deseja viajar.</p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-5">
-                <Card 
-                  onClick={() => { setVehicle('moto'); setStep(3); }}
-                  className="flex items-center gap-6 group"
-                >
-                  <div className="w-20 h-20 bg-brand-green/10 rounded-3xl flex items-center justify-center group-hover:bg-brand-green transition-all duration-500">
-                    <Bike className="w-10 h-10 text-brand-green group-hover:text-white transition-colors" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-black text-2xl text-slate-900">Moto</h3>
-                    <p className="text-sm text-slate-500 font-medium">Agilidade para o dia a dia</p>
-                  </div>
-                  <ChevronRight className="text-slate-300 group-hover:text-brand-green transition-colors" />
-                </Card>
-
-                <Card 
-                  onClick={() => { setVehicle('car'); setStep(3); }}
-                  className="flex items-center gap-6 group"
-                >
-                  <div className="w-20 h-20 bg-brand-blue/10 rounded-3xl flex items-center justify-center group-hover:bg-brand-blue transition-all duration-500">
-                    <Car className="w-10 h-10 text-brand-blue group-hover:text-white transition-colors" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-black text-2xl text-slate-900">Carro</h3>
-                    <p className="text-sm text-slate-500 font-medium">Conforto e climatização</p>
-                  </div>
-                  <ChevronRight className="text-slate-300 group-hover:text-brand-blue transition-colors" />
-                </Card>
-              </div>
-            </motion.div>
-          )}
-
           {step === 3 && (
             <motion.div 
               key="step3"
@@ -527,207 +425,108 @@ export default function App() {
                 </h2>
                 <p className="text-slate-500 font-medium">Preencha os detalhes para solicitar.</p>
               </div>
-
-              {/* Location Card */}
-              {service !== 'school_van' && (
-                <Card className="p-6 flex flex-col gap-5 border-none bg-white/60 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-brand-blue/5 rounded-full -mr-12 -mt-12" />
-                  <div className="flex items-center justify-between relative z-10">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 bg-brand-blue/10 rounded-2xl flex items-center justify-center">
-                        <MapPin className="w-7 h-7 text-brand-blue" />
-                      </div>
-                      <div>
-                        <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Localização</h4>
-                        <p className="text-base font-bold text-slate-800">
-                          {location ? 'GPS Conectado' : 'Aguardando GPS'}
-                        </p>
-                      </div>
+                      {/* Location Card */}
+              <Card className="p-6 flex flex-col gap-5 border-none bg-white/60 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-brand-blue/5 rounded-full -mr-12 -mt-12" />
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-brand-blue/10 rounded-2xl flex items-center justify-center">
+                      <MapPin className="w-7 h-7 text-brand-blue" />
                     </div>
-                    {!location && (
-                      <button 
-                        onClick={getGeolocation}
-                        disabled={loadingLocation}
-                        className="text-[11px] font-black uppercase tracking-widest bg-brand-blue text-white px-5 py-3 rounded-2xl shadow-xl shadow-brand-blue/20 disabled:opacity-50 active:scale-95 transition-all"
-                      >
-                        {loadingLocation ? '...' : 'Ativar'}
-                      </button>
-                    )}
+                    <div>
+                      <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Localização</h4>
+                      <p className="text-base font-bold text-slate-800">
+                        {location ? 'GPS Conectado' : 'Aguardando GPS'}
+                      </p>
+                    </div>
                   </div>
-                  {location && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center gap-3 text-[11px] font-mono text-brand-green bg-brand-green/5 p-3 rounded-xl border border-brand-green/20"
+                  {!location && (
+                    <button 
+                      onClick={getGeolocation}
+                      disabled={loadingLocation}
+                      className="text-[11px] font-black uppercase tracking-widest bg-brand-blue text-white px-5 py-3 rounded-2xl shadow-xl shadow-brand-blue/20 disabled:opacity-50 active:scale-95 transition-all"
                     >
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Coordenadas: {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}</span>
-                    </motion.div>
+                      {loadingLocation ? '...' : 'Ativar'}
+                    </button>
                   )}
-                </Card>
-              )}
+                </div>
+                {location && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-3 text-[11px] font-mono text-brand-green bg-brand-green/5 p-3 rounded-xl border border-brand-green/20"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Coordenadas: {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}</span>
+                  </motion.div>
+                )}
+              </Card>
 
               {/* Form */}
               <div className="flex flex-col gap-6">
-                {(service === 'ride' || service === 'delivery') && (
-                  <div className="flex flex-col gap-3">
-                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                      Selecione a Região
-                    </label>
-                    <div className="grid grid-cols-3 gap-3">
-                      {(['Centro', 'Bairros', 'Trizidela/Perimirim'] as const).map((r) => (
-                        <button
-                          key={r}
-                          onClick={() => setRegion(r)}
-                          className={cn(
-                            "py-4 px-2 rounded-2xl text-[10px] font-black uppercase tracking-tight border-2 transition-all duration-300",
-                            region === r 
-                              ? "bg-brand-green border-brand-green text-white shadow-brand scale-[1.02]" 
-                              : "bg-white/60 border-white/80 text-slate-500 hover:border-brand-green/30"
-                          )}
-                        >
-                          {r}
-                        </button>
-                      ))}
-                    </div>
+                <div className="flex flex-col gap-3">
+                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                    Selecione a Região
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {(['Centro', 'Bairros', 'Trizidela/Perimirim'] as const).map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => setRegion(r)}
+                        className={cn(
+                          "py-4 px-2 rounded-2xl text-[10px] font-black uppercase tracking-tight border-2 transition-all duration-300",
+                          region === r 
+                            ? "bg-brand-green border-brand-green text-white shadow-brand scale-[1.02]" 
+                            : "bg-white/60 border-white/80 text-slate-500 hover:border-brand-green/30"
+                        )}
+                      >
+                        {r}
+                      </button>
+                    ))}
                   </div>
-                )}
+                </div>
 
-                {service === 'school_van' ? (
-                  <>
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 px-1">
-                        <div className="h-px flex-1 bg-slate-200" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Responsável</span>
-                        <div className="h-px flex-1 bg-slate-200" />
-                      </div>
-                      <Input 
-                        label="Nome do Responsável" 
-                        icon={User}
-                        value={name} 
-                        onChange={(e) => setName(e.target.value)} 
-                        placeholder="Nome completo" 
-                      />
-                      <Input 
-                        label="Endereço de Residência" 
-                        icon={Navigation}
-                        value={origin} 
-                        onChange={(e) => setOrigin(e.target.value)} 
-                        placeholder="Rua, número e bairro" 
-                      />
-                      <Input 
-                        label="WhatsApp de Contato" 
-                        icon={Smartphone}
-                        value={phone} 
-                        onChange={(e) => setPhone(e.target.value)} 
-                        placeholder="(00) 00000-0000" 
-                      />
-                    </div>
+                <Input 
+                  label="Seu Nome" 
+                  icon={Smartphone}
+                  value={name} 
+                  onChange={(e) => setName(e.target.value)} 
+                  placeholder="Como podemos te chamar?" 
+                />
 
-                    <div className="space-y-4 pt-2">
-                      <div className="flex items-center gap-2 px-1">
-                        <div className="h-px flex-1 bg-slate-200" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Criança</span>
-                        <div className="h-px flex-1 bg-slate-200" />
-                      </div>
-                      <Input 
-                        label="Nome da Criança" 
-                        icon={Users}
-                        value={childName} 
-                        onChange={(e) => setChildName(e.target.value)} 
-                        placeholder="Nome completo da criança" 
-                      />
-                      <Input 
-                        label="Escola" 
-                        icon={School}
-                        value={destination} 
-                        onChange={(e) => setDestination(e.target.value)} 
-                        placeholder="Nome da escola" 
-                      />
-                      <div className="grid grid-cols-2 gap-4">
-                        <Input 
-                          label="Série" 
-                          icon={GraduationCap}
-                          value={childGrade} 
-                          onChange={(e) => setChildGrade(e.target.value)} 
-                          placeholder="Ex: 2º ano" 
-                        />
-                        <Input 
-                          label="Sala" 
-                          icon={Hash}
-                          value={childRoom} 
-                          onChange={(e) => setChildRoom(e.target.value)} 
-                          placeholder="Ex: 204" 
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                          Turno de Aula
-                        </label>
-                        <div className="grid grid-cols-2 gap-3">
-                          {(['Matutino', 'Vespertino'] as const).map((t) => (
-                            <button
-                              key={t}
-                              onClick={() => setChildShift(t)}
-                              className={cn(
-                                "py-4 px-2 rounded-2xl text-[10px] font-black uppercase tracking-tight border-2 transition-all duration-300",
-                                childShift === t 
-                                  ? "bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-500/20" 
-                                  : "bg-white/60 border-white/80 text-slate-500 hover:border-amber-500/30"
-                              )}
-                            >
-                              {t}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <Input 
-                      label="Seu Nome" 
-                      icon={Smartphone}
-                      value={name} 
-                      onChange={(e) => setName(e.target.value)} 
-                      placeholder="Como podemos te chamar?" 
-                    />
+                <Input 
+                  label="Local de Origem" 
+                  icon={Navigation}
+                  value={origin} 
+                  onChange={(e) => setOrigin(e.target.value)} 
+                  placeholder="Onde você está agora?" 
+                />
 
-                    <Input 
-                      label="Local de Origem" 
-                      icon={Navigation}
-                      value={origin} 
-                      onChange={(e) => setOrigin(e.target.value)} 
-                      placeholder="Onde você está agora?" 
-                    />
+                <Input 
+                  label={service === 'ride' ? 'Destino Final' : 'O que entregar?'} 
+                  icon={MapPinned}
+                  value={destination} 
+                  onChange={(e) => setDestination(e.target.value)} 
+                  placeholder={service === 'ride' ? 'Para onde você vai?' : 'Descreva o seu pedido'} 
+                />
 
-                    <Input 
-                      label={service === 'ride' ? 'Destino Final' : 'O que entregar?'} 
-                      icon={MapPinned}
-                      value={destination} 
-                      onChange={(e) => setDestination(e.target.value)} 
-                      placeholder={service === 'ride' ? 'Para onde você vai?' : 'Descreva o seu pedido'} 
-                    />
-
-                    <div className="flex flex-col gap-2">
-                      <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                        Observações Adicionais
-                      </label>
-                      <textarea 
-                        value={details}
-                        onChange={(e) => setDetails(e.target.value)}
-                        placeholder="Ponto de referência, cor da casa, etc..."
-                        rows={3}
-                        className="glass-input w-full px-5 py-4 rounded-2xl text-slate-900 placeholder:text-slate-400 resize-none"
-                      />
-                    </div>
-                  </>
-                )}
+                <div className="flex flex-col gap-2">
+                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                    Observações Adicionais
+                  </label>
+                  <textarea 
+                    value={details}
+                    onChange={(e) => setDetails(e.target.value)}
+                    placeholder="Ponto de referência, cor da casa, etc..."
+                    rows={3}
+                    className="glass-input w-full px-5 py-4 rounded-2xl text-slate-900 placeholder:text-slate-400 resize-none"
+                  />
+                </div>
               </div>
 
               {/* Price & Action */}
               <div className="space-y-5 pt-4">
-                {(region || service === 'school_van') && (
+                {region && (
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -736,14 +535,14 @@ export default function App() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16" />
                     <div className="flex items-center gap-4 relative z-10">
                       <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center">
-                        {service === 'school_van' ? <Star className="w-7 h-7 text-amber-500" /> : <Clock className="w-7 h-7 text-brand-green" />}
+                        <Clock className="w-7 h-7 text-brand-green" />
                       </div>
                       <div>
                         <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
-                          {service === 'school_van' ? 'Valor Mensal' : 'Valor Estimado'}
+                          Valor Estimado
                         </h4>
-                        <p className={cn("text-xs font-bold", service === 'school_van' ? "text-amber-500" : "text-brand-green")}>
-                          {service === 'school_van' ? 'Contrato Mensal' : 'Pagamento na entrega'}
+                        <p className="text-xs font-bold text-brand-green">
+                          Pagamento na entrega
                         </p>
                       </div>
                     </div>
@@ -757,15 +556,11 @@ export default function App() {
 
                 <Button 
                   onClick={handleSendRequest}
-                  disabled={
-                    service === 'school_van' 
-                      ? (!name || !origin || !phone || !childName || !destination || !childGrade || !childShift)
-                      : (!name || !origin || !destination || !region)
-                  }
+                  disabled={!name || !origin || !destination || !region}
                   className="w-full py-6 text-xl rounded-[24px]"
                   icon={Send}
                 >
-                  {service === 'school_van' ? 'Enviar Cadastro' : 'Chamar no WhatsApp'}
+                  Chamar no WhatsApp
                 </Button>
               </div>
             </motion.div>
