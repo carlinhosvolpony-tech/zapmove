@@ -36,7 +36,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 
 // --- Types ---
-type ServiceType = 'ride' | 'delivery' | null;
+type ServiceType = 'ride' | 'delivery' | 'school_moto' | null;
 type VehicleType = 'moto' | null;
 type RegionType = 'Centro' | 'Bairros' | 'Trizidela/Perimirim' | null;
 
@@ -61,7 +61,8 @@ const PRICES = {
     'Centro': 2.00,
     'Bairros': 3.00,
     'Trizidela/Perimirim': 5.00
-  }
+  },
+  school_moto: 200.00
 };
 
 // --- Components ---
@@ -154,6 +155,11 @@ export default function App() {
   const [destination, setDestination] = useState('');
   const [details, setDetails] = useState('');
   const [region, setRegion] = useState<RegionType>(null);
+  const [phone, setPhone] = useState('');
+  const [childName, setChildName] = useState('');
+  const [childGrade, setChildGrade] = useState('');
+  const [childRoom, setChildRoom] = useState('');
+  const [childShift, setChildShift] = useState('');
   const [step, setStep] = useState(1);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallModal, setShowInstallModal] = useState(false);
@@ -204,6 +210,7 @@ export default function App() {
   };
 
   const getPrice = () => {
+    if (service === 'school_moto') return PRICES.school_moto;
     if (!region) return null;
     if (service === 'delivery') return PRICES.delivery[region];
     if (service === 'ride' && vehicle) return PRICES.ride[vehicle][region];
@@ -220,23 +227,41 @@ export default function App() {
       serviceLabel = 'TRANSPORTE (MOTO)';
     } else if (service === 'delivery') {
       serviceLabel = 'DELIVERY MOTO';
+    } else if (service === 'school_moto') {
+      serviceLabel = 'MOTO ESCOLAR (MENSAL)';
     }
 
     const price = getPrice();
     const priceText = price 
-      ? `R$ ${price.toFixed(2).replace('.', ',')}` 
+      ? `R$ ${price.toFixed(2).replace('.', ',')}${service === 'school_moto' ? '/mês' : ''}` 
       : 'A combinar';
 
     let message = '';
     
-    message = `*NOVO CHAMADO - ${serviceLabel}*%0A%0A` +
-      `*Nome:* ${name}%0A` +
-      `*Região:* ${region}%0A` +
-      `*Origem:* ${origin}%0A` +
-      `*Destino/Pedido:* ${destination}%0A` +
-      `*Valor Estimado:* ${priceText}%0A` +
-      `*Detalhes:* ${details || 'Nenhum'}%0A%0A` +
-      `*Minha Localização:* ${locationLink}`;
+    if (service === 'school_moto') {
+      message = `*CADASTRO MOTO ESCOLAR*%0A%0A` +
+        `*DADOS DO RESPONSÁVEL*%0A` +
+        `*Nome:* ${name}%0A` +
+        `*Endereço:* ${origin}%0A` +
+        `*Telefone:* ${phone}%0A%0A` +
+        `*DADOS DA CRIANÇA*%0A` +
+        `*Nome:* ${childName}%0A` +
+        `*Escola:* ${destination}%0A` +
+        `*Série:* ${childGrade}%0A` +
+        `*Sala:* ${childRoom}%0A` +
+        `*Turno:* ${childShift}%0A%0A` +
+        `*Valor Mensal:* ${priceText}%0A` +
+        `*Localização Ref:* ${locationLink}`;
+    } else {
+      message = `*NOVO CHAMADO - ${serviceLabel}*%0A%0A` +
+        `*Nome:* ${name}%0A` +
+        `*Região:* ${region}%0A` +
+        `*Origem:* ${origin}%0A` +
+        `*Destino/Pedido:* ${destination}%0A` +
+        `*Valor Estimado:* ${priceText}%0A` +
+        `*Detalhes:* ${details || 'Nenhum'}%0A%0A` +
+        `*Minha Localização:* ${locationLink}`;
+    }
 
     const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
     window.open(whatsappUrl, '_blank');
@@ -248,6 +273,11 @@ export default function App() {
     setStep(1);
     setName('');
     setOrigin('');
+    setPhone('');
+    setChildName('');
+    setChildGrade('');
+    setChildRoom('');
+    setChildShift('');
     setDestination('');
     setDetails('');
     setRegion(null);
@@ -260,6 +290,7 @@ export default function App() {
   const getStep3Title = () => {
     if (service === 'ride') return 'Transporte Moto';
     if (service === 'delivery') return 'Delivery Moto';
+    if (service === 'school_moto') return 'Moto Escolar';
     return '';
   };
 
@@ -393,6 +424,23 @@ export default function App() {
                     <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-brand-blue" />
                   </div>
                 </Card>
+
+                <Card 
+                  onClick={() => { setService('school_moto'); setVehicle('moto'); setStep(3); }}
+                  className="flex items-center gap-6 group relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full -mr-16 -mt-16 transition-transform duration-700 group-hover:scale-150" />
+                  <div className="w-20 h-20 bg-amber-500/10 rounded-3xl flex items-center justify-center group-hover:bg-amber-500 group-hover:rotate-6 transition-all duration-500">
+                    <Bike className="w-10 h-10 text-amber-500 group-hover:text-white transition-colors" />
+                  </div>
+                  <div className="flex-1 relative z-10">
+                    <h3 className="font-black text-2xl text-slate-900">Moto Escolar</h3>
+                    <p className="text-sm text-slate-500 font-medium">Transporte mensal aluno</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-slate-50 group-hover:bg-amber-500/20 group-hover:translate-x-2 transition-all duration-300">
+                    <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-amber-500" />
+                  </div>
+                </Card>
               </div>
 
               {/* Trust Badges */}
@@ -464,69 +512,165 @@ export default function App() {
 
               {/* Form */}
               <div className="flex flex-col gap-6">
-                <div className="flex flex-col gap-3">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                    Selecione a Região
-                  </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {(['Centro', 'Bairros', 'Trizidela/Perimirim'] as const).map((r) => (
-                      <button
-                        key={r}
-                        onClick={() => setRegion(r)}
-                        className={cn(
-                          "py-4 px-2 rounded-2xl text-[10px] font-black uppercase tracking-tight border-2 transition-all duration-300",
-                          region === r 
-                            ? "bg-brand-green border-brand-green text-white shadow-brand scale-[1.02]" 
-                            : "bg-white/60 border-white/80 text-slate-500 hover:border-brand-green/30"
-                        )}
-                      >
-                        {r}
-                      </button>
-                    ))}
+                {(service === 'ride' || service === 'delivery') && (
+                  <div className="flex flex-col gap-3">
+                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                      Selecione a Região
+                    </label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {(['Centro', 'Bairros', 'Trizidela/Perimirim'] as const).map((r) => (
+                        <button
+                          key={r}
+                          onClick={() => setRegion(r)}
+                          className={cn(
+                            "py-4 px-2 rounded-2xl text-[10px] font-black uppercase tracking-tight border-2 transition-all duration-300",
+                            region === r 
+                              ? "bg-brand-green border-brand-green text-white shadow-brand scale-[1.02]" 
+                              : "bg-white/60 border-white/80 text-slate-500 hover:border-brand-green/30"
+                          )}
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <Input 
-                  label="Seu Nome" 
-                  icon={Smartphone}
-                  value={name} 
-                  onChange={(e) => setName(e.target.value)} 
-                  placeholder="Como podemos te chamar?" 
-                />
+                {service === 'school_moto' ? (
+                  <>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 px-1">
+                        <div className="h-px flex-1 bg-slate-200" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Responsável</span>
+                        <div className="h-px flex-1 bg-slate-200" />
+                      </div>
+                      <Input 
+                        label="Nome do Responsável" 
+                        icon={User}
+                        value={name} 
+                        onChange={(e) => setName(e.target.value)} 
+                        placeholder="Nome completo" 
+                      />
+                      <Input 
+                        label="Endereço de Residência" 
+                        icon={Navigation}
+                        value={origin} 
+                        onChange={(e) => setOrigin(e.target.value)} 
+                        placeholder="Rua, número e bairro" 
+                      />
+                      <Input 
+                        label="WhatsApp de Contato" 
+                        icon={Smartphone}
+                        value={phone} 
+                        onChange={(e) => setPhone(e.target.value)} 
+                        placeholder="(00) 00000-0000" 
+                      />
+                    </div>
 
-                <Input 
-                  label="Local de Origem" 
-                  icon={Navigation}
-                  value={origin} 
-                  onChange={(e) => setOrigin(e.target.value)} 
-                  placeholder="Onde você está agora?" 
-                />
+                    <div className="space-y-4 pt-2">
+                      <div className="flex items-center gap-2 px-1">
+                        <div className="h-px flex-1 bg-slate-200" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Criança</span>
+                        <div className="h-px flex-1 bg-slate-200" />
+                      </div>
+                      <Input 
+                        label="Nome do Aluno" 
+                        icon={Users}
+                        value={childName} 
+                        onChange={(e) => setChildName(e.target.value)} 
+                        placeholder="Nome completo do aluno" 
+                      />
+                      <Input 
+                        label="Escola" 
+                        icon={School}
+                        value={destination} 
+                        onChange={(e) => setDestination(e.target.value)} 
+                        placeholder="Nome da escola" 
+                      />
+                      <div className="grid grid-cols-2 gap-4">
+                        <Input 
+                          label="Série" 
+                          icon={GraduationCap}
+                          value={childGrade} 
+                          onChange={(e) => setChildGrade(e.target.value)} 
+                          placeholder="Ex: 2º ano" 
+                        />
+                        <Input 
+                          label="Sala" 
+                          icon={Hash}
+                          value={childRoom} 
+                          onChange={(e) => setChildRoom(e.target.value)} 
+                          placeholder="Ex: 204" 
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                          Turno de Aula
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                          {(['Matutino', 'Vespertino'] as const).map((t) => (
+                            <button
+                              key={t}
+                              onClick={() => setChildShift(t)}
+                              className={cn(
+                                "py-4 px-2 rounded-2xl text-[10px] font-black uppercase tracking-tight border-2 transition-all duration-300",
+                                childShift === t 
+                                  ? "bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-500/20" 
+                                  : "bg-white/60 border-white/80 text-slate-500 hover:border-amber-500/30"
+                              )}
+                            >
+                              {t}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Input 
+                      label="Seu Nome" 
+                      icon={Smartphone}
+                      value={name} 
+                      onChange={(e) => setName(e.target.value)} 
+                      placeholder="Como podemos te chamar?" 
+                    />
 
-                <Input 
-                  label={service === 'ride' ? 'Destino Final' : 'O que entregar?'} 
-                  icon={MapPinned}
-                  value={destination} 
-                  onChange={(e) => setDestination(e.target.value)} 
-                  placeholder={service === 'ride' ? 'Para onde você vai?' : 'Descreva o seu pedido'} 
-                />
+                    <Input 
+                      label="Local de Origem" 
+                      icon={Navigation}
+                      value={origin} 
+                      onChange={(e) => setOrigin(e.target.value)} 
+                      placeholder="Onde você está agora?" 
+                    />
 
-                <div className="flex flex-col gap-2">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                    Observações Adicionais
-                  </label>
-                  <textarea 
-                    value={details}
-                    onChange={(e) => setDetails(e.target.value)}
-                    placeholder="Ponto de referência, cor da casa, etc..."
-                    rows={3}
-                    className="glass-input w-full px-5 py-4 rounded-2xl text-slate-900 placeholder:text-slate-400 resize-none"
-                  />
-                </div>
+                    <Input 
+                      label={service === 'ride' ? 'Destino Final' : 'O que entregar?'} 
+                      icon={MapPinned}
+                      value={destination} 
+                      onChange={(e) => setDestination(e.target.value)} 
+                      placeholder={service === 'ride' ? 'Para onde você vai?' : 'Descreva o seu pedido'} 
+                    />
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                        Observações Adicionais
+                      </label>
+                      <textarea 
+                        value={details}
+                        onChange={(e) => setDetails(e.target.value)}
+                        placeholder="Ponto de referência, cor da casa, etc..."
+                        rows={3}
+                        className="glass-input w-full px-5 py-4 rounded-2xl text-slate-900 placeholder:text-slate-400 resize-none"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Price & Action */}
               <div className="space-y-5 pt-4">
-                {region && (
+                {(region || service === 'school_moto') && (
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -539,10 +683,10 @@ export default function App() {
                       </div>
                       <div>
                         <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
-                          Valor Estimado
+                          {service === 'school_moto' ? 'Valor Mensal' : 'Valor Estimado'}
                         </h4>
                         <p className="text-xs font-bold text-brand-green">
-                          Pagamento na entrega
+                          {service === 'school_moto' ? 'Contrato Mensal' : 'Pagamento na entrega'}
                         </p>
                       </div>
                     </div>
@@ -556,11 +700,15 @@ export default function App() {
 
                 <Button 
                   onClick={handleSendRequest}
-                  disabled={!name || !origin || !destination || !region}
+                  disabled={
+                    service === 'school_moto'
+                      ? (!name || !origin || !phone || !childName || !destination || !childGrade || !childShift)
+                      : (!name || !origin || !destination || !region)
+                  }
                   className="w-full py-6 text-xl rounded-[24px]"
                   icon={Send}
                 >
-                  Chamar no WhatsApp
+                  {service === 'school_moto' ? 'Enviar Cadastro' : 'Chamar no WhatsApp'}
                 </Button>
               </div>
             </motion.div>
