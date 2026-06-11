@@ -41,7 +41,7 @@ const PRICES = {
   school_moto: 150.00
 };
 
-const WHATSAPP_NUMBER = '5598991475862'; 
+const WHATSAPP_NUMBER = '5598984595785'; 
 
 type ServiceType = 'ride' | 'delivery' | 'school_moto' | null;
 type VehicleType = 'moto' | null;
