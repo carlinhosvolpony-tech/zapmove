@@ -34,11 +34,11 @@ const PRICES = {
     }
   },
   delivery: {
-    Centro: 5.00,
-    Bairros: 7.00,
+    Centro: 2.00,
+    Bairros: 3.00,
     'Trizidela/Perimirim': 10.00
   },
-  school_moto: 150.00
+  school_moto: 200.00
 };
 
 const WHATSAPP_NUMBER = '5598984595785'; 
