@@ -36,7 +36,7 @@ const PRICES = {
   delivery: {
     Centro: 2.00,
     Bairros: 3.00,
-    'Trizidela/Perimirim': 10.00
+    'Trizidela/Perimirim': 5.00
   },
   school_moto: 200.00
 };
