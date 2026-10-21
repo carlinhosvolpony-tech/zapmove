@@ -13,7 +13,6 @@ import {
   MapPinned, 
   Search, 
   Phone, 
-  CreditCard, 
   Banknote, 
   CheckCircle2, 
   X, 
@@ -38,7 +37,7 @@ import {
 } from './data/neighborhoods';
 
 type ServiceType = 'delivery' | 'ride' | 'school_moto' | null;
-type PaymentMethod = 'pix' | 'dinheiro' | 'cartao';
+type PaymentMethod = 'pix' | 'dinheiro';
 type PriceFilter = 'todos' | number;
 
 interface LocationData {
@@ -143,8 +142,7 @@ export default function App() {
 
     const paymentLabel = {
       pix: 'PIX (Chave enviada após confirmação)',
-      dinheiro: needsChange ? `Dinheiro (Troco para R$ ${needsChange})` : 'Dinheiro (Sem troco)',
-      cartao: 'Cartão de Débito/Crédito'
+      dinheiro: needsChange ? `Dinheiro (Troco para R$ ${needsChange})` : 'Dinheiro (Sem troco)'
     }[paymentMethod];
 
     let message = '';
@@ -995,14 +993,14 @@ export default function App() {
                       <label className="text-[11px] font-black uppercase text-slate-400 ml-1">
                         Forma de Pagamento
                       </label>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 gap-2.5">
                         <button
                           type="button"
                           onClick={() => setPaymentMethod('pix')}
-                          className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all ${
+                          className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all ${
                             paymentMethod === 'pix' 
                               ? 'bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-500/20' 
-                              : 'bg-slate-50 border-slate-200 text-slate-600'
+                              : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                           }`}
                         >
                           <Sparkles className="w-4 h-4 text-emerald-600" />
@@ -1012,27 +1010,14 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => setPaymentMethod('dinheiro')}
-                          className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all ${
+                          className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all ${
                             paymentMethod === 'dinheiro' 
                               ? 'bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-500/20' 
-                              : 'bg-slate-50 border-slate-200 text-slate-600'
+                              : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                           }`}
                         >
                           <Banknote className="w-4 h-4 text-emerald-600" />
                           <span>Dinheiro</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setPaymentMethod('cartao')}
-                          className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all ${
-                            paymentMethod === 'cartao' 
-                              ? 'bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-500/20' 
-                              : 'bg-slate-50 border-slate-200 text-slate-600'
-                          }`}
-                        >
-                          <CreditCard className="w-4 h-4 text-emerald-600" />
-                          <span>Cartão</span>
                         </button>
                       </div>
 
